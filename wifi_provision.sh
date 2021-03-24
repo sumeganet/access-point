@@ -1,5 +1,6 @@
 #!/bin/sh
-# wget --no-check-certificate  https://gitlab.meganet.com.vn/great/wifi_servers_quality/-/raw/master/new_ap_installation.sh -O - -q | sh
+# Please make sure wget & ca-certificate installed as command: opkg update && opkg install wget ca-certificates
+# wget --no-check-certificate  https://raw.githubusercontent.com/sumeganet/access-point/main/wifi_provision.sh -O - -q | sh
 
 # MAC ADDRESS
 currentAPMacAddress(){
@@ -114,33 +115,10 @@ printf "\nset kernel hostname: OK!\n"
 printf "\nYOUR HOSTNAME: `cat /proc/sys/kernel/hostname`\n"
 printf "\nSETUP HOSTNAME HAS COMPLETED!\n"
 
-## Repository Setup ##
-printOnlyEqual
-printf "\n---------====[ SETTING REPOSITORY FOR THIS DEVICE ] ====---------\n"
-### Backup current repository
-cp /etc/opkg/distfeeds.conf /etc/opkg/distfeeds.conf.`date +"%Y-%m-%d_%H-%M-%S"`
-printf "\nBackup current repository: OK!\n"
-### Update new repository
-echo "src/gz openwrt_core http://downloads.openwrt.org/releases/19.07.5/targets/ath79/generic/packages
-src/gz openwrt_kmods http://downloads.openwrt.org/releases/19.07.5/targets/ath79/generic/kmods/4.14.209-1-b84a5a29b1d5ae1dc33ccf9ba292ca1d
-src/gz openwrt_base http://downloads.openwrt.org/releases/19.07.5/packages/mips_24kc/base
-src/gz openwrt_freifunk http://downloads.openwrt.org/releases/19.07.5/packages/mips_24kc/freifunk
-src/gz openwrt_luci http://downloads.openwrt.org/releases/19.07.5/packages/mips_24kc/luci
-src/gz openwrt_packages http://downloads.openwrt.org/releases/19.07.5/packages/mips_24kc/packages
-src/gz openwrt_routing http://downloads.openwrt.org/releases/19.07.5/packages/mips_24kc/routing
-src/gz openwrt_telephony http://downloads.openwrt.org/releases/19.07.5/packages/mips_24kc/telephony" > /etc/opkg/distfeeds.conf
-printf "\nupdate new repository: OK!\n\n"
-
-opkg update
-printf "\n\nRun update new repository: OK!\n"
-
-printf "\nSETUP REPOSITORY HAS COMPLETED!\n"
-
-## Repository Setup ##
 printOnlyEqual
 printf "\n---------====[ SETTING LIBRARY AND PACKAGES FOR THIS DEVICE ] ====---------\n"
 ### Install packges - this one depending on ## Repository Setup ## Part
-opkg install prometheus-node-exporter-lua-nat_traffic prometheus-node-exporter-lua-netstat prometheus-node-exporter-lua-openwrt prometheus-node-exporter-lua-textfile prometheus-node-exporter-lua-wifi prometheus-node-exporter-lua-wifi_stations autossh ttyd
+opkg install prometheus-node-exporter-lua-nat_traffic prometheus-node-exporter-lua-netstat prometheus-node-exporter-lua-openwrt prometheus-node-exporter-lua-textfile prometheus-node-exporter-lua-wifi prometheus-node-exporter-lua-wifi_stations autossh ttyd opennds
 printf "\nInstall packages from new repository: OK!\n"
 ### Restart service and enable (run when reboot device)
 /etc/init.d/prometheus-node-exporter-lua enable
