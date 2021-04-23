@@ -55,9 +55,9 @@ printf "\n
 
 Your Mac Address: $MAC
 Your Meganet ID: $MEGANET_AP_ID 
-Your Local NAT IP: $LOCAL_NAT_IP \n"
+Your Local NAT IP: $LOCAL_NAT_IP \n\n\n"
 
-
+echo "=================================================================================="
 ###############################################################################################################################
 ###                                             AUTO SSSH
 ###############################################################################################################################
@@ -76,7 +76,6 @@ isAutoSSHRunning()
 
 generateNewAutoSSHConfig()
 {
-    echo "Being generate new AutoSSH config file and put to /tmp/autossh"
     echo "config autossh
 	option ssh	'-N -T
 				-o StrictHostKeyChecking=no
@@ -96,13 +95,13 @@ generateNewAutoSSHConfig()
 compareAutoSSHConfig()
 {
     generateNewAutoSSHConfig
-    currentAutoSSHConfig = `sha256sum /etc/config/autossh  | awk '{print $1}'`
-    newAutoSSHConfig = `sha256sum /tmp/autossh  | awk '{print $1}'`
-    if [ $currentAutoSSHConfig -eq $newAutoSSHConfig ]
+    currentAutoSSHConfig=`sha256sum /etc/config/autossh  | awk '{print $1}'`
+    newAutoSSHConfig=`sha256sum /tmp/autossh  | awk '{print $1}'`
+    if [ $currentAutoSSHConfig == $newAutoSSHConfig ]
     then
-        echo 'AutoSSH Config matched\n'
+        echo "AutoSSH Config matched \n"
     else
-        echo 'Update new AutoSSH Config\n'
+        echo "Update new AutoSSH Config \n"
         mv /tmp/autossh /etc/config/autossh
     fi
 }
@@ -113,16 +112,19 @@ compareAutoSSHConfig()
 # Setup AutoSSH
 if [ -f "/etc/config/autossh" ]; 
 then
+    compareAutoSSHConfig
+    
+else 
+    echo "Being generate new AutoSSH config file and put to /tmp/autossh"
     generateNewAutoSSHConfig
     mv /tmp/autossh/ /etc/config/
-else 
-    compareAutoSSHConfig
 fi
 
 
 # Kiem tra AutoSSH da chay chua?
 isAutoSSHRunning
 
+echo "=================================================================================="
 ###############################################################################################################################
 ###                                             NODE EXPORTER
 ###############################################################################################################################
@@ -145,6 +147,7 @@ isNodeExporterRunning()
 # Kiem tra Node Exporter da chay chua?
 isNodeExporterRunning
 
+echo "=================================================================================="
 ###############################################################################################################################
 ###                                             PROMETHEUS SERVER
 ###############################################################################################################################
@@ -165,7 +168,7 @@ isPrometheuServerRunning()
 # Kiem tra phan mem giam sat da chay chua?
 isPrometheuServerRunning
 
-
+echo "=================================================================================="
 ###############################################################################################################################
 ###                                             TTYD
 ###############################################################################################################################
@@ -187,7 +190,7 @@ isTTYDRunning()
 
 generateNewTTYDConfig()
 {
-    echo "Being generate new TTYD config file and put to /tmp/autossh"
+    
     echo "config ttyd
 	option interface '@loopback'
 	option command '/bin/sh -l'
@@ -197,13 +200,13 @@ generateNewTTYDConfig()
 compareTTYDConfig()
 {
     generateNewTTYDConfig
-    currentTTYDConfig = `sha256sum /etc/config/ttyd  | awk '{print $1}'`
-    newTTYDConfig = `sha256sum /tmp/ttyd  | awk '{print $1}'`
-    if [ $currentTTYDConfig -eq $newTTYDConfig ]
+    currentTTYDConfig=`sha256sum /etc/config/ttyd  | awk '{print $1}'`
+    newTTYDConfig=`sha256sum /tmp/ttyd  | awk '{print $1}'`
+    if [ $currentTTYDConfig == $newTTYDConfig ]
     then
-        echo 'TTYD Config matched\n'
+        echo "TTYD Config matched\n"
     else
-        echo 'Update new TTYD Config\n'
+        echo "Update new TTYD Config\n"
         mv /tmp/ttyd /etc/config/ttyd
     fi
 }
@@ -211,16 +214,17 @@ compareTTYDConfig()
 # Setup TTYD
 if [ -f "/etc/config/ttyd" ]; 
 then
-    generateNewTTYDConfig
-    mv /tmp/autossh/ /etc/config/
-else 
     compareTTYDConfig
+else 
+    echo "Being generate new TTYD config file and put to /tmp/ttyd"
+    generateNewTTYDConfig
+    mv /tmp/ttyd /etc/config/
 fi
-
 
 # Kiem tra TTYD da chay chua?
 isTTYDRunning
 
+echo "=================================================================================="
 ###############################################################################################################################
 ###                                             CRONTAB
 ###############################################################################################################################
@@ -233,7 +237,7 @@ isCrontabRunning()
     cron_STATUS=`ps  | grep crond | wc -l `
     if [ $cron_STATUS -gt 0 ]
     then
-        printf "Crontabs: OK"
+        printf "Crontabs: OK\n"
     else
         /etc/init.d/cron restart
         printf "Crontabs: Restarted\n"
@@ -243,27 +247,26 @@ isCrontabRunning()
 # Kiem tra Crontab da chay chua?
 isCrontabRunning
 
-
+echo "=================================================================================="
 ###############################################################################################################################
 ###                                             MEGANET SCRIPT
 ###############################################################################################################################
 
 generateNewMeganetScript()
 {
-    echo "Being download new crontab file and put to /www/meganet.sh"
-    wget --no-check-certificate https://raw.githubusercontent.com/sumeganet/access-point/main/meganet.sh -O /www/meganet.sh -q 
+    wget --no-check-certificate https://raw.githubusercontent.com/sumeganet/access-point/main/meganet.sh -O /tmp/meganet.sh -q 
 }
 
 compareMeganetScript()
 {
     generateNewMeganetScript
-    currentMeganetScript = `sha256sum /www/meganet.sh  | awk '{print $1}'`
-    newMeganetScript = `sha256sum /tmp/meganet.sh  | awk '{print $1}'`
-    if [ $currentMeganetScript -eq $newMeganetScript ]
+    currentMeganetScript=`sha256sum /www/meganet.sh  | awk '{print $1}'`
+    newMeganetScript=`sha256sum /tmp/meganet.sh  | awk '{print $1}'`
+    if [ $currentMeganetScript == $newMeganetScript ]
     then
-        echo 'Meganet Script matched\n'
+        echo "Meganet Script matched\n"
     else
-        echo 'Update new Meganet Script\n'
+        echo "Update new Meganet Script\n"
         mv /tmp/ttyd /etc/config/ttyd
     fi
 }
@@ -271,16 +274,20 @@ compareMeganetScript()
 # Setup Meganet Script
 if [ -f "/www/meganet.sh" ]; 
 then
-    generateNewMeganetScript
-    mv /tmp/autossh /etc/config/
-else 
     compareMeganetScript
+else 
+    echo "Being download new MegaNet script and put to /tmp/meganet.sh"
+    generateNewMeganetScript
+    mv /tmp/meganet.sh /www/meganet.sh
 fi
 
-printf "=========== INSTALLATION COMPLETED! ============\n"
+echo "=================================================================================="
+printf "---------==============[ INSTALLATION COMPLETED! ] =================---------\n"
+
 isAutoSSHRunning #?
 isNodeExporterRunning #? 
 isPrometheuServerRunning #?
 isTTYDRunning #? 
 isCrontabRunning #?
-printf "Note: Please reboot AP to make sure everything working exacely!!\n"
+
+printf "\nNote: Please reboot AP to make sure everything working exacely!!\n"
