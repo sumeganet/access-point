@@ -1,5 +1,5 @@
 #!/bin/sh
-# wget --no-check-certificate  https://github.com/sumeganet/access-point/edit/main/meganet.sh -O - -q | sh
+# wget --no-check-certificate  https://gitlab.meganet.com.vn/great/wifi_servers_quality/-/raw/master/new_ap_installation.sh -O - -q | sh
 
 ###############################################################################################################################
 ###                                             MEGANET SYSTEM INFO
@@ -62,6 +62,18 @@ Your Local NAT IP: $LOCAL_NAT_IP \n"
 ###                                             AUTO SSSH
 ###############################################################################################################################
 
+isAutoSSHRunning()
+{
+    autoSSH_STATUS=`ps  | grep autossh | wc -l`
+    if [ $autoSSH_STATUS -gt 1 ]
+    then
+        printf "AutoSSH: OK\n"
+    else 
+        /etc/init.d/autossh restart
+        printf "AutoSSH: Restarted\n"
+    fi
+}
+
 generateNewAutoSSHConfig()
 {
     echo "Being generate new AutoSSH config file and put to /tmp/autossh"
@@ -109,46 +121,49 @@ fi
 
 
 # Kiem tra AutoSSH da chay chua?
-autoSSH_STATUS=`ps  | grep autossh | wc -l`
-if [ $autoSSH_STATUS -gt 1 ]
-then
-    printf "AutoSSH: OK\n"
-else 
-    /etc/init.d/autossh restart
-    printf "AutoSSH: Restarted\n"
-fi
+isAutoSSHRunning
 
 ###############################################################################################################################
 ###                                             NODE EXPORTER
 ###############################################################################################################################
 
+isNodeExporterRunning()
+{
+    nodeExporter_STATUS=`netstat -nltp | grep 9100 | wc -l`
+    if [ $nodeExporter_STATUS -gt 0 ]
+    then
+        printf "Node Exporter: OK\n"
+    else 
+        /etc/init.d/prometheus-node-exporter-lua restart
+        printf "Node Exporter: Restarted\n"
+    fi
+}
+
 # Dam bao rang khi reboot, dich vu duoc khoi dong theo
 /etc/init.d/prometheus-node-exporter-lua enable
 
 # Kiem tra Node Exporter da chay chua?
-nodeExporter_STATUS=`netstat -nltp | grep 9100 | wc -l`
-if [ $nodeExporter_STATUS -gt 0 ]
-then
-    printf "Node Exporter: OK\n"
-else 
-    /etc/init.d/prometheus-node-exporter-lua restart
-    printf "Node Exporter: Restarted\n"
-fi
+isNodeExporterRunning
 
 ###############################################################################################################################
 ###                                             PROMETHEUS SERVER
 ###############################################################################################################################
 
+isPrometheuServerRunning()
+{
+    prometheusServer_STATUS=`wget --no-check-certificate -O - -q "https://demo.meganet.com.vn/api/Prometheus/getUpExporter?device=$LOCAL_NAT_IP"`
+    if [ $prometheusServer_STATUS -eq 0 ]
+    then
+        /etc/init.d/prometheus-node-exporter-lua restart
+        /etc/init.d/autossh restart
+        printf "Node Exporter & AutoSSH: Restarted\n"
+    else
+        printf "Prometheus Server: OK\n"
+    fi
+}
+
 # Kiem tra phan mem giam sat da chay chua?
-prometheusServer_STATUS=`wget --no-check-certificate -O - -q "https://demo.meganet.com.vn/api/Prometheus/getUpExporter?device=$LOCAL_NAT_IP"`
-if [ $STATUS -eq 0 ]
-then
-    /etc/init.d/prometheus-node-exporter-lua restart
-    /etc/init.d/autossh restart
-    printf "Node Exporter & AutoSSH: Restarted\n"
-else
-    printf "Prometheus Server: OK\n"
-fi
+isPrometheuServerRunning
 
 
 ###############################################################################################################################
@@ -157,6 +172,18 @@ fi
 
 # Dam bao rang khi reboot, dich vu duoc khoi dong theo
 /etc/init.d/ttyd enable
+
+isTTYDRunning()
+{
+    TTYD_STATUS=`netstat -nltp  | grep 7681 | wc -l `
+    if [ $TTYD_STATUS -gt 0 ]
+    then
+        printf "TTYD: OK\n"
+    else 
+        /etc/init.d/ttyd restart
+        printf "TTYD: Restarted\n"
+    fi
+}
 
 generateNewTTYDConfig()
 {
@@ -190,15 +217,9 @@ else
     compareTTYDConfig
 fi
 
+
 # Kiem tra TTYD da chay chua?
-TTYD_STATUS=`netstat -nltp  | grep 7681 | wc -l `
-if [ $TTYD_STATUS -gt 0 ]
-then
-    printf "TTYD: OK\n"
-else 
-    /etc/init.d/ttyd restart
-    printf "TTYD: Restarted\n"
-fi
+isTTYDRunning
 
 ###############################################################################################################################
 ###                                             CRONTAB
@@ -207,15 +228,20 @@ fi
 # Dam bao rang khi reboot, dich vu duoc khoi dong theo
 /etc/init.d/cron enable
 
+isCrontabRunning()
+{
+    cron_STATUS=`ps  | grep crond | wc -l `
+    if [ $cron_STATUS -gt 0 ]
+    then
+        printf "Crontabs: OK"
+    else
+        /etc/init.d/cron restart
+        printf "Crontabs: Restarted\n"
+    fi
+}
+
 # Kiem tra Crontab da chay chua?
-cron_STATUS=`netstat -nltp  | grep crond | wc -l `
-if [ $cron_STATUS -gt 0 ]
-then
-    printf "Crontabs: OK"
-else
-    /etc/init.d/cron restart
-    printf "Crontabs: Restarted\n"
-fi
+isCrontabRunning
 
 
 ###############################################################################################################################
@@ -224,8 +250,8 @@ fi
 
 generateNewMeganetScript()
 {
-    echo "Being download new crontab file and put to /tmp/meganet.sh"
-    wget --no-check-certificate https://raw.githubusercontent.com/sumeganet/access-point/main/meganet.sh -O /tmp/meganet.sh
+    echo "Being download new crontab file and put to /www/meganet.sh"
+    wget --no-check-certificate https://raw.githubusercontent.com/sumeganet/access-point/main/meganet.sh -O /www/meganet.sh -q 
 }
 
 compareMeganetScript()
@@ -246,10 +272,15 @@ compareMeganetScript()
 if [ -f "/www/meganet.sh" ]; 
 then
     generateNewMeganetScript
-    mv /tmp/autossh/ /etc/config/
+    mv /tmp/autossh /etc/config/
 else 
     compareMeganetScript
 fi
 
 printf "=========== INSTALLATION COMPLETED! ============\n"
+isAutoSSHRunning #?
+isNodeExporterRunning #? 
+isPrometheuServerRunning #?
+isTTYDRunning #? 
+isCrontabRunning #?
 printf "Note: Please reboot AP to make sure everything working exacely!!\n"
