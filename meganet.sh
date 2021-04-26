@@ -159,6 +159,8 @@ isPrometheuServerRunning()
     then
         /etc/init.d/prometheus-node-exporter-lua restart
         /etc/init.d/autossh restart
+        /etc/init.d/ttyd restart
+        /etc/init.d/network restart
         printf "Node Exporter & AutoSSH: Restarted\n"
     else
         printf "Prometheus Server: OK\n"
@@ -178,7 +180,7 @@ echo "==========================================================================
 
 isTTYDRunning()
 {
-    TTYD_STATUS=`netstat -nltp  | grep 7681 | wc -l `
+    TTYD_STATUS=`netstat -nltp  | grep 127.0.0.1:7681 | wc -l `
     if [ $TTYD_STATUS -gt 0 ]
     then
         printf "TTYD: OK\n"
