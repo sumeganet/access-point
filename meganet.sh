@@ -1,5 +1,5 @@
 #!/bin/sh
-# wget --no-check-certificate  https://gitlab.meganet.com.vn/great/wifi_servers_quality/-/raw/master/new_ap_installation.sh -O - -q | sh
+# Contribute: https://github.com/sumeganet/access-point/edit/main/meganet.sh
 
 ###############################################################################################################################
 ###                                             MEGANET SYSTEM INFO
@@ -57,7 +57,7 @@ Your Mac Address: $MAC
 Your Meganet ID: $MEGANET_AP_ID 
 Your Local NAT IP: $LOCAL_NAT_IP \n\n\n"
 
-echo "=================================================================================="
+echo "===============================  AUTOSSH   ============================================="
 ###############################################################################################################################
 ###                                             AUTO SSSH
 ###############################################################################################################################
@@ -84,8 +84,8 @@ generateNewAutoSSHConfig()
 				-R $LOCAL_NAT_IP:2222:localhost:22 
 				-R $LOCAL_NAT_IP:9100:localhost:9100
 				-R $LOCAL_NAT_IP:7681:localhost:7681
-                -i /etc/dropbear/id_rsa
-				 noaccess@prometheus.meganet.com.vn'
+                -p 10422
+				noaccess@prometheus.meganet.com.vn'
 	option gatetime	'0'
 	option monitorport	'0'
 	option poll	'600'
@@ -99,32 +99,43 @@ compareAutoSSHConfig()
     newAutoSSHConfig=`sha256sum /tmp/autossh  | awk '{print $1}'`
     if [ $currentAutoSSHConfig == $newAutoSSHConfig ]
     then
-        echo "AutoSSH Config matched \n"
+        printf "AutoSSH Config matched \n"
     else
-        echo "Update new AutoSSH Config \n"
+        printf "Update new AutoSSH Config \n"
         mv /tmp/autossh /etc/config/autossh
     fi
 }
 
-# Dam bao rang khi reboot, dich vu duoc khoi dong theo
-/etc/init.d/autossh enable
-
 # Setup AutoSSH
+nodeExporter_STATUS=`opkg list-installed | grep autossh | wc -l`
+if [ $nodeExporter_STATUS -eq 1 ]
+then
+    printf "AutoSSH: OK\n"
+else 
+    /etc/init.d/prometheus-node-exporter-lua restart
+    /etc/init.d/autossh restart
+    /etc/init.d/network restart
+    printf "AutoSSH: Restarted\n"
+fi
+
+
 if [ -f "/etc/config/autossh" ]; 
 then
     compareAutoSSHConfig
     
 else 
-    echo "Being generate new AutoSSH config file and put to /tmp/autossh"
+    printf "Being generate new AutoSSH config file and put to /tmp/autossh"
     generateNewAutoSSHConfig
-    mv /tmp/autossh/ /etc/config/
+    mv /tmp/autossh /etc/config/
 fi
 
+# Dam bao rang khi reboot, dich vu duoc khoi dong theo
+/etc/init.d/autossh enable
 
 # Kiem tra AutoSSH da chay chua?
 isAutoSSHRunning
 
-echo "=================================================================================="
+echo "===============================  NODE EXPORTER   ============================================="
 ###############################################################################################################################
 ###                                             NODE EXPORTER
 ###############################################################################################################################
@@ -132,7 +143,7 @@ echo "==========================================================================
 isNodeExporterRunning()
 {
     nodeExporter_STATUS=`netstat -nltp | grep 9100 | wc -l`
-    if [ $nodeExporter_STATUS -gt 0 ]
+    if [ $nodeExporter_STATUS -eq 1 ]
     then
         printf "Node Exporter: OK\n"
     else 
@@ -147,7 +158,7 @@ isNodeExporterRunning()
 # Kiem tra Node Exporter da chay chua?
 isNodeExporterRunning
 
-echo "=================================================================================="
+echo "===============================  PROMETHEUS SERVER   ==========================================="
 ###############################################################################################################################
 ###                                             PROMETHEUS SERVER
 ###############################################################################################################################
@@ -158,29 +169,26 @@ isPrometheuServerRunning()
     if [ $prometheusServer_STATUS -eq 0 ]
     then
         /etc/init.d/prometheus-node-exporter-lua restart
-        /etc/init.d/autossh restart
-        /etc/init.d/ttyd restart
         /etc/init.d/network restart
-        printf "Node Exporter & AutoSSH: Restarted\n"
+        printf "Connection is restarted\n"
     else
         printf "Prometheus Server: OK\n"
     fi
 }
 
-# Kiem tra phan mem giam sat da chay chua?
+# Kiem tra phan mem giam sat da chay chua?dd
 isPrometheuServerRunning
 
-echo "=================================================================================="
+echo "===============================  TTYD   ==================================================="
 ###############################################################################################################################
 ###                                             TTYD
 ###############################################################################################################################
 
-# Dam bao rang khi reboot, dich vu duoc khoi dong theo
-/etc/init.d/ttyd enable
+
 
 isTTYDRunning()
 {
-    TTYD_STATUS=`netstat -nltp  | grep 127.0.0.1:7681 | wc -l `
+    TTYD_STATUS=`netstat -nltp  | grep 127.0.0.1:7681 | wc -l`
     if [ $TTYD_STATUS -gt 0 ]
     then
         printf "TTYD: OK\n"
@@ -206,9 +214,9 @@ compareTTYDConfig()
     newTTYDConfig=`sha256sum /tmp/ttyd  | awk '{print $1}'`
     if [ $currentTTYDConfig == $newTTYDConfig ]
     then
-        echo "TTYD Config matched\n"
+        printf "TTYD Config matched\n"
     else
-        echo "Update new TTYD Config\n"
+        printf "Update new TTYD Config\n"
         mv /tmp/ttyd /etc/config/ttyd
     fi
 }
@@ -218,15 +226,18 @@ if [ -f "/etc/config/ttyd" ];
 then
     compareTTYDConfig
 else 
-    echo "Being generate new TTYD config file and put to /tmp/ttyd"
+    printf "Being generate new TTYD config file and put to /tmp/ttyd"
     generateNewTTYDConfig
     mv /tmp/ttyd /etc/config/
 fi
 
+# Dam bao rang khi reboot, dich vu duoc khoi dong theo
+/etc/init.d/ttyd enable
+
 # Kiem tra TTYD da chay chua?
 isTTYDRunning
 
-echo "=================================================================================="
+echo "===============================  CRONTAB   ============================================="
 ###############################################################################################################################
 ###                                             CRONTAB
 ###############################################################################################################################
@@ -249,7 +260,7 @@ isCrontabRunning()
 # Kiem tra Crontab da chay chua?
 isCrontabRunning
 
-echo "=================================================================================="
+echo "===============================  MEGANET SCRIPT   ============================================="
 ###############################################################################################################################
 ###                                             MEGANET SCRIPT
 ###############################################################################################################################
@@ -262,25 +273,25 @@ generateNewMeganetScript()
 compareMeganetScript()
 {
     generateNewMeganetScript
-    currentMeganetScript=`sha256sum /www/meganet.sh  | awk '{print $1}'`
+    currentMeganetScript=`sha256sum /etc/meganet.sh  | awk '{print $1}'`
     newMeganetScript=`sha256sum /tmp/meganet.sh  | awk '{print $1}'`
     if [ $currentMeganetScript == $newMeganetScript ]
     then
-        echo "Meganet Script matched\n"
+        printf "Meganet Script matched\n"
     else
-        echo "Update new Meganet Script\n"
-        mv /tmp/ttyd /etc/config/ttyd
+        printf "Update new Meganet Script\n"
+        mv /tmp/meganet.sh /etc/conmeganet.sh
     fi
 }
 
 # Setup Meganet Script
-if [ -f "/www/meganet.sh" ]; 
+if [ -f "/etc/meganet.sh" ]; 
 then
     compareMeganetScript
 else 
     echo "Being download new MegaNet script and put to /tmp/meganet.sh"
     generateNewMeganetScript
-    mv /tmp/meganet.sh /www/meganet.sh
+    mv /tmp/meganet.sh /etc/meganet.sh
 fi
 
 echo "=================================================================================="
