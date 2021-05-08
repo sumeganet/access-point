@@ -260,13 +260,32 @@ isCrontabRunning()
 # Kiem tra Crontab da chay chua?
 isCrontabRunning
 
-echo "===============================  Firewall   ============================================="
+echo "===============================  OpenNDS   ============================================="
 ###############################################################################################################################
-###                                             Firewall
+###                                             OpenNDS
 ###############################################################################################################################
 
 # Dam bao rang khi reboot, dich vu duoc khoi dong theo
-ipset create openndsset hash:ip
+
+
+isOpenNDSRunning()
+{
+    cron_STATUS=`ndsctl status | grep "openNDS Status" | wc -l`
+    if [ $cron_STATUS -gt 0 ]
+    then
+        printf "openNDS: OK\n"
+    else
+        /usr/sbin/ipset create openndsset hash:ip
+        /etc/init.d/odhcpd restart 
+        /etc/init.d/firewall restart
+        /etc/init.d/network restart
+        /etc/init.d/opennds restart
+        printf "openNDS: Restarted\n"
+    fi
+}
+
+# Kiem tra Crontab da chay chua?
+isCrontabRunning
 
 echo "===============================  MEGANET SCRIPT   ============================================="
 ###############################################################################################################################
