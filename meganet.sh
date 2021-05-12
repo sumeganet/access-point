@@ -69,8 +69,8 @@ isAutoSSHRunning()
     then
         printf "AutoSSH: OK\n"
     else 
-        /etc/init.d/autossh restart
-        printf "AutoSSH: Restarted\n"
+        /etc/init.d/autossh reload
+        printf "AutoSSH: Reloaded \n"
     fi
 }
 
@@ -112,10 +112,10 @@ if [ $nodeExporter_STATUS -eq 1 ]
 then
     printf "AutoSSH: OK\n"
 else 
-    /etc/init.d/prometheus-node-exporter-lua restart
-    /etc/init.d/autossh restart
-    /etc/init.d/network restart
-    printf "AutoSSH: Restarted\n"
+    /etc/init.d/prometheus-node-exporter-lua reload
+    /etc/init.d/autossh reload
+    /etc/init.d/network reload
+    printf "AutoSSH: Reloaded\n"
 fi
 
 
@@ -147,8 +147,8 @@ isNodeExporterRunning()
     then
         printf "Node Exporter: OK\n"
     else 
-        /etc/init.d/prometheus-node-exporter-lua restart
-        printf "Node Exporter: Restarted\n"
+        /etc/init.d/prometheus-node-exporter-lua reload
+        printf "Node Exporter: Reloaded\n"
     fi
 }
 
@@ -168,9 +168,9 @@ isPrometheuServerRunning()
     prometheusServer_STATUS=`wget --no-check-certificate -O - -q "https://demo.meganet.com.vn/api/Prometheus/getUpExporter?device=$LOCAL_NAT_IP"`
     if [ $prometheusServer_STATUS -eq 0 ]
     then
-        /etc/init.d/prometheus-node-exporter-lua restart
-        /etc/init.d/network restart
-        printf "Connection is restarted\n"
+        /etc/init.d/prometheus-node-exporter-lua reload
+        /etc/init.d/network reload
+        printf "Connection is reloaded\n"
     else
         printf "Prometheus Server: OK\n"
     fi
@@ -193,8 +193,8 @@ isTTYDRunning()
     then
         printf "TTYD: OK\n"
     else 
-        /etc/init.d/ttyd restart
-        printf "TTYD: Restarted\n"
+        /etc/init.d/ttyd reload
+        printf "TTYD: Reloaded\n"
     fi
 }
 
@@ -252,8 +252,8 @@ isCrontabRunning()
     then
         printf "Crontabs: OK\n"
     else
-        /etc/init.d/cron restart
-        printf "Crontabs: Restarted\n"
+        /etc/init.d/cron reload
+        printf "Crontabs: Reloaded\n"
     fi
 }
 
@@ -276,16 +276,16 @@ isOpenNDSRunning()
         printf "openNDS: OK\n"
     else
         /usr/sbin/ipset create openndsset hash:ip
-        /etc/init.d/odhcpd restart 
-        /etc/init.d/firewall restart
-        /etc/init.d/network restart
-        /etc/init.d/opennds restart
-        printf "openNDS: Restarted\n"
+        /etc/init.d/odhcpd reload 
+        /etc/init.d/firewall reload
+        /etc/init.d/network reload
+        /etc/init.d/opennds reload
+        printf "openNDS: Reloaded\n"
     fi
 }
 
 # Kiem tra Crontab da chay chua?
-isCrontabRunning
+isOpenNDSRunning
 
 echo "===============================  MEGANET SCRIPT   ============================================="
 ###############################################################################################################################
@@ -329,5 +329,6 @@ isNodeExporterRunning #?
 isPrometheuServerRunning #?
 isTTYDRunning #? 
 isCrontabRunning #?
+isOpenNDSRunning #?
 
 printf "\nNote: Please reboot AP to make sure everything working exacely!!\n"
