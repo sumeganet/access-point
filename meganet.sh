@@ -8,7 +8,7 @@
 # Lay MAC address cua thiet bi hien tai
 getCurrentAPMacAddress(){
 	## Mac should be in br-lan or br-wan
-	local MAC_BRLAN=`ifconfig | grep br-lan | awk '{print $5}'` 
+	local MAC_BRLAN=`ifconfig | grep br-lan | awk '{print $5}' | head -1` 
 	local MAC_BRWAN=`ifconfig | grep br-wan | awk '{print $5}'` 
 
 	if [ "${#MAC_BRLAN}" -gt 1 ]                                       
